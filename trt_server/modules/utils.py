@@ -91,15 +91,9 @@ def parse_arguments(desc):
                         default='image', type=str,
                         choices=('image', 'video'),
                         help='Type of Input: image, video. Default: image')
-    parser.add_argument('-ox', '--onnx_path',
-                        default="yolov5/yolov5s.onnx",  type=str,
-                        help='Path to ONNX model. efault: yolov5/yolov5s.onnx')
     parser.add_argument('-o', '--output_dir',
                         default='output',  type=str,
                         help='Output directory. Default: output')
-    parser.add_argument('-c', '--num_classes',
-                        default=80,  type=int,
-                        help='Num of classes. Default: 80')
     parser.add_argument('-t', '--detection-threshold',
                         default=0.6,  type=float,
                         help='Detection Threshold. Default: 0.6')
@@ -156,4 +150,45 @@ def resize_maintaining_aspect(img, width, height):
         # no resizing done if both width and height are None
         return img
     img = cv2.resize(img, (new_w, new_h))
+    return img
+
+
+def resize_aspect_ratio(img, square_size, interpolation, mag_ratio=1):
+    height, width, channel = img.shape
+
+    # magnify image size
+    target_size = mag_ratio * max(height, width)
+
+    # set original image size
+    if target_size > square_size:
+        target_size = square_size
+
+    ratio = target_size / max(height, width)
+
+    target_h, target_w = int(height * ratio), int(width * ratio)
+    proc = cv2.resize(img, (target_w, target_h), interpolation=interpolation)
+
+    # make canvas and paste image
+    target_h32, target_w32 = target_h, target_w
+    if target_h % 32 != 0:
+        target_h32 = target_h + (32 - target_h % 32)
+    if target_w % 32 != 0:
+        target_w32 = target_w + (32 - target_w % 32)
+    resized = np.zeros((target_h32, target_w32, channel), dtype=np.float32)
+    resized[0:target_h, 0:target_w, :] = proc
+    target_h, target_w = target_h32, target_w32
+
+    size_heatmap = (int(target_w / 2), int(target_h / 2))
+
+    return resized, ratio, size_heatmap
+
+
+def normalizeMeanVariance(in_img, mean=(0.485, 0.456, 0.406), variance=(0.229, 0.224, 0.225)):
+    # should be RGB order
+    img = in_img.copy().astype(np.float32)
+
+    img -= np.array([mean[0] * 255.0, mean[1] * 255.0,
+                     mean[2] * 255.0], dtype=np.float32)
+    img /= np.array([variance[0] * 255.0, variance[1] * 255.0,
+                     variance[2] * 255.0], dtype=np.float32)
     return img

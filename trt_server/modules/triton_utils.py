@@ -1,5 +1,6 @@
 import os
 import cv2
+import traceback
 import numpy as np
 from io import BytesIO
 from PIL import Image
@@ -94,6 +95,7 @@ def extract_data_from_media(FLAGS, preprocess_func, media_filenames, w, h):
                 fps = 1
             except Exception as e:
                 print(f"{e}. Failed to process image {filename}")
+                traceback.print_exc()
         elif FLAGS.inference_mode == "video":
             try:
                 cap = cv2.VideoCapture(filename)
