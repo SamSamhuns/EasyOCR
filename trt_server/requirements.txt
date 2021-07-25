@@ -1,0 +1,6 @@
+nvidia-pyindex==1.0.6
+onnx==1.9.0
+onnxruntime==1.8.0
+opencv-python==4.5.1.48
+Pillow==8.1.0
+tritonclient==2.6.0
