@@ -94,15 +94,15 @@ def parse_arguments(desc):
     parser.add_argument('-o', '--output_dir',
                         default='output',  type=str,
                         help='Output directory. Default: output')
-    parser.add_argument('-t', '--detection-threshold',
+    parser.add_argument('-t', '--detection_threshold',
                         default=0.6,  type=float,
                         help='Detection Threshold. Default: 0.6')
     parser.add_argument('-g', '--grpc_port',
                         default="8994",
-                        help='grpc port where triton-server is exposed')
+                        help='grpc port where triton-server is exposed. Default: 8994')
     parser.add_argument('--debug',
                         default=True,
-                        help='Debug Mode')
+                        help='Debug Mode Default: True')
 
     return parser.parse_args()
 
