@@ -1,7 +1,7 @@
-from modules.triton_utils import extract_data_from_media, get_client_and_model_metadata_config
-from modules.triton_utils import parse_model_grpc, get_inference_responses
-from modules.utils import Flag_config, parse_arguments, resize_maintaining_aspect, plot_one_box
-from modules.utils import resize_aspect_ratio, normalizeMeanVariance
+from .modules.triton_utils import extract_data_from_media, get_client_and_model_metadata_config
+from .modules.triton_utils import parse_model_grpc, get_inference_responses
+from .modules.utils import Flag_config, parse_arguments, resize_maintaining_aspect, plot_one_box
+from .modules.utils import resize_aspect_ratio, normalizeMeanVariance
 
 import numpy as np
 import time
@@ -10,6 +10,10 @@ import os
 
 
 FLAGS = Flag_config()
+
+
+def identity_func(x):
+    return x
 
 
 def preprocess(img, width=640, height=480, new_type=np.uint8):
@@ -33,11 +37,8 @@ def preprocess_craft_detector(img, width=640, height=480, new_type=np.uint8):
 
 
 def postprocess(results, output_name):
-    output_set = set(output_name)
-    print(output_set)
-    detection_out = results.as_numpy("output")
-    print(detection_out.shape)
 
+    detection_out = results.as_numpy("output")
     return detection_out
 
 
@@ -164,11 +165,40 @@ def run_demo_odet(media_filename,
 
 class InferenceNet(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, model_name="craft_text_detector"):
+        self.FLAGS = Flag_config()
+        self.FLAGS.model_name = model_name
+        self.FLAGS.model_version = ""  # empty str means use latest
+        self.FLAGS.protocol = "grpc"
+        self.FLAGS.url = '127.0.0.1:8994'
+        self.FLAGS.verbose = False
+        self.FLAGS.batch_size = 1
+        self.FLAGS.classes = 0  # classes must be set to 0
+        self.model_info = get_client_and_model_metadata_config(self.FLAGS)
 
-    def __call__(self):
-        pass
+    def __call__(self, image_data):
+        triton_client, model_metadata, model_config = self.model_info
+
+        # input_name, output_name, format, dtype are all lists
+        max_batch_size, input_name, output_name, h, w, c, format, dtype = parse_model_grpc(
+            model_metadata, model_config.config)
+
+        trt_inf_data = (triton_client, input_name,
+                        output_name, dtype, max_batch_size)
+        # if a model with only one input
+        # the remaining two inputs are ignored
+        image_data_list = [image_data,
+                           None,
+                           None]
+        # get inference results
+        responses = get_inference_responses(
+            image_data_list, self.FLAGS, trt_inf_data)
+        final_result_list = []
+        for response in responses:
+            model_output = postprocess(response, output_name)
+            final_result_list.append(model_output)
+
+        return np.squeeze(np.asarray(final_result_list), axis=0)
 
 
 def main():
