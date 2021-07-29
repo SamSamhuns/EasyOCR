@@ -162,6 +162,15 @@ def run_demo_odet(media_filename,
     return final_result_list
 
 
+class InferenceNet(object):
+
+    def __init__(self):
+        pass
+
+    def __call__(self):
+        pass
+
+
 def main():
     args = parse_arguments("Scene Text Detection")
     run_demo_odet(args.input_path,
