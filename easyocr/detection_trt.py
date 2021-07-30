@@ -36,8 +36,8 @@ def test_net(canvas_size, mag_ratio, net, image, text_threshold, link_threshold,
         img_resized_list.append(img_resized)
     ratio_h = ratio_w = 1 / target_ratio
     # preprocessing
-    x = np.array([normalizeMeanVariance(n_img) for n_img in img_resized_list])
-    x = np.transpose(x, (0, 3, 1, 2))  # [b,h,w,c] to [b,c,h,w]
+    x = [np.transpose(normalizeMeanVariance(n_img), (2, 0, 1)) for n_img in img_resized_list]
+    x = np.array(x)
 
     # forward pass
     y = net(x)
