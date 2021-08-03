@@ -33,7 +33,7 @@ def preprocess_craft_detector(img, width=640, height=480, new_type=np.uint8):
     ratio_h = ratio_w = 1 / target_ratio
     img_resized = normalizeMeanVariance(img_resized)
     img_resized = np.transpose(img_resized, (2, 0, 1))
-    return img_resized
+    return img_resized, ratio_h, ratio_w
 
 
 def postprocess(results, output_name):
@@ -104,7 +104,7 @@ def run_demo_odet(media_filename,
 
     # all_reqested_images_orig will be [] if FLAGS.result_save_dir is None
     image_data, all_reqested_images_orig, all_reqested_images_orig_size, fps = extract_data_from_media(
-        FLAGS, preprocess_craft_detector, filenames, w, h)
+        FLAGS, preprocess, filenames, w, h)
 
     if len(image_data) == 0:
         print("Image data is missing. Aborting inference")
