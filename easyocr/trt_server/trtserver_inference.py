@@ -177,6 +177,8 @@ class InferenceNet(object):
         self.model_info = get_client_and_model_metadata_config(self.FLAGS)
 
     def __call__(self, image_data):
+        if self.model_info == -1:  # if model has not been loaded for inference
+            self.model_info = get_client_and_model_metadata_config(self.FLAGS)
         triton_client, model_metadata, model_config = self.model_info
 
         # input_name, output_name, format, dtype are all lists
