@@ -6,6 +6,7 @@ import numpy as np
 import math
 import cv2
 from PIL import Image, JpegImagePlugin
+from scipy import ndimage
 import hashlib
 import sys, os
 from zipfile import ZipFile
@@ -476,7 +477,7 @@ def group_text_box(polys, slope_ths = 0.1, ycenter_ths = 0.5, height_ths = 0.5, 
                     x_max = box[1]
                     new_box.append(box)
                 else:
-                    if (abs(np.mean(b_height) - box[5]) < height_ths*np.mean(b_height)) and (abs(box[0]-x_max) < width_ths *(box[3]-box[2])): # merge boxes
+                    if (abs(np.mean(b_height) - box[5]) < height_ths*np.mean(b_height)) and ((box[0]-x_max) < width_ths *(box[3]-box[2])): # merge boxes
                         b_height.append(box[5])
                         x_max = box[1]
                         new_box.append(box)
@@ -666,7 +667,7 @@ def get_paragraph(raw_result, x_ths=1, y_ths=0.5, mode = 'ltr'):
     return result
 
 
-def printProgressBar (prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+def printProgressBar(prefix='', suffix='', decimals=1, length=100, fill='█'):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -682,7 +683,7 @@ def printProgressBar (prefix = '', suffix = '', decimals = 1, length = 100, fill
         percent = ("{0:." + str(decimals) + "f}").format(progress * 100)
         filledLength = int(length * progress)
         bar = fill * filledLength + '-' * (length - filledLength)
-        print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+        print(f'\r{prefix} |{bar}| {percent}% {suffix}', end='')
 
     return progress_hook
 
@@ -721,7 +722,7 @@ def reformat_input(image):
         img = cv2.cvtColor(image_array, cv2.COLOR_RGB2BGR)
         img_cv_grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     else:
-        raise ValueError('Invalid input type. Suppoting format = string(file path or url), bytes, numpy array')
+        raise ValueError('Invalid input type. Supporting format = string(file path or url), bytes, numpy array')
 
     return img, img_cv_grey
 
@@ -755,79 +756,38 @@ def reformat_input_batched(image, n_width=None, n_height=None):
     return img, img_cv_grey
 
 
+
 def make_rotated_img_list(rotationInfo, img_list):
+
     result_img_list = img_list[:]
 
     # add rotated images to original image_list
     max_ratio=1
-    if 90 in rotationInfo:
-        for img_info in img_list:
-            ninty_image = cv2.rotate(img_info[1],cv2.ROTATE_90_COUNTERCLOCKWISE)
-            height,width = ninty_image.shape
+    
+    for angle in rotationInfo:
+        for img_info in img_list : 
+            rotated = ndimage.rotate(img_info[1], angle, reshape=True) 
+            height,width = rotated.shape
             ratio = calculate_ratio(width,height)
             max_ratio = max(max_ratio,ratio)
-            result_img_list.append((img_info[0],ninty_image))
-
-    if 180 in rotationInfo:
-        for img_info in img_list:
-            one_eighty_image = cv2.rotate(img_info[1],cv2.ROTATE_180)
-            height,width = one_eighty_image.shape
-            ratio = calculate_ratio(width,height)
-            max_ratio = max(max_ratio,ratio)
-            result_img_list.append((img_info[0], one_eighty_image))
-
-    if 270 in rotationInfo:
-        for img_info in img_list:
-            two_seventy_image = cv2.rotate(img_info[1], cv2.ROTATE_90_CLOCKWISE)
-            height,width = two_seventy_image.shape
-            ratio = calculate_ratio(width,height)
-            max_ratio = max(max_ratio,ratio)
-            result_img_list.append((img_info[0],two_seventy_image))
-
+            result_img_list.append((img_info[0], rotated))
     return result_img_list
 
 
-def set_result_with_confidence(result_list, origin_len):
-    set_len = len(result_list)//origin_len
-
-    k = 0
-    result_to_split = [[],[],[],[]]
-    for i in range(set_len):
-        tmp_list = []
-        for j in range(origin_len):
-            tmp_list.append(result_list[k])
-            k += 1
-        result_to_split[i] += tmp_list
-
-
-    result1 = result_to_split[0]
-    result2 = result_to_split[1]
-    result3 = result_to_split[2]
-    result4 = result_to_split[3]
-
+def set_result_with_confidence(results):
+    """ Select highest confidence augmentation for TTA
+    Given a list of lists of results (outer list has one list per augmentation,
+    inner lists index the images being recognized), choose the best result 
+    according to confidence level.
+    Each "result" is of the form (box coords, text, confidence)
+    A final_result is returned which contains one result for each image
+    """
     final_result = []
-    for i in range(origin_len):
-        result = result1[i] # format : ([[,],[,],[,],[,]], 'string', confidnece)
-        confidence = result1[i][2]
-
-        if result2:
-            if result2[i][2] > confidence:
-                if len(result2[i][1]) >= len(result[1]):
-                    result = result2[i]
-                    confidence = result2[i][2]
-
-        if result3:
-            if result3[i][2] > confidence:
-                if len(result3[i][1]) >= len(result[1]):
-                    result = result3[i]
-                    confidence = result3[i][2]
-
-        if result4:
-            if result4[i][2] > confidence:
-                if len(result4[i][1]) >= len(result[1]):
-                    result = result4[i]
-                    confidence = result4[i][2]
-
-        final_result.append(result)
+    for col_ix in range(len(results[0])):
+        # Take the row_ix associated with the max confidence
+        best_row = max(
+            [(row_ix, results[row_ix][col_ix][2]) for row_ix in range(len(results))],
+            key=lambda x: x[1])[0]
+        final_result.append(results[best_row][col_ix])
 
     return final_result
