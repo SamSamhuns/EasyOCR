@@ -88,9 +88,9 @@ class Reader(object):
                 LOGGER.warning('Downloading detection model, please wait. '
                                'This may take several minutes depending upon your network connection.')
                 download_and_unzip(detection_models[detector_model]['url'], detection_models[detector_model]['filename'], self.model_storage_directory, verbose)
-                assert calculate_md5(detector_path) == detection_models[detector_model]['filesize'], corrupt_msg
+                assert calculate_md5(detector_path) == detection_models[detector_model]['md5sum'], corrupt_msg
                 LOGGER.info('Download complete')
-            elif calculate_md5(detector_path) != detection_models[detector_model]['filesize']:
+            elif calculate_md5(detector_path) != detection_models[detector_model]['md5sum']:
                 if not self.download_enabled:
                     raise FileNotFoundError("MD5 mismatch for %s and downloads disabled" % detector_path)
                 LOGGER.warning(corrupt_msg)
@@ -98,7 +98,7 @@ class Reader(object):
                 LOGGER.warning('Re-downloading the detection model, please wait. '
                                'This may take several minutes depending upon your network connection.')
                 download_and_unzip(detection_models[detector_model]['url'], detection_models[detector_model]['filename'], self.model_storage_directory, verbose)
-                assert calculate_md5(detector_path) == detection_models[detector_model]['filesize'], corrupt_msg
+                assert calculate_md5(detector_path) == detection_models[detector_model]['md5sum'], corrupt_msg
 
         # recognition model
         separator_list = {}
@@ -185,9 +185,9 @@ class Reader(object):
                     LOGGER.warning('Downloading recognition model, please wait. '
                                    'This may take several minutes depending upon your network connection.')
                     download_and_unzip(model['url'], model['filename'], self.model_storage_directory, verbose)
-                    assert calculate_md5(model_path) == model['filesize'], corrupt_msg
+                    assert calculate_md5(model_path) == model['md5sum'], corrupt_msg
                     LOGGER.info('Download complete.')
-                elif calculate_md5(model_path) != model['filesize']:
+                elif calculate_md5(model_path) != model['md5sum']:
                     if not self.download_enabled:
                         raise FileNotFoundError("MD5 mismatch for %s and downloads disabled" % model_path)
                     LOGGER.warning(corrupt_msg)
@@ -195,16 +195,20 @@ class Reader(object):
                     LOGGER.warning('Re-downloading the recognition model, please wait. '
                                    'This may take several minutes depending upon your network connection.')
                     download_and_unzip(model['url'], model['filename'], self.model_storage_directory, verbose)
-                    assert calculate_md5(model_path) == model['filesize'], corrupt_msg
+                    assert calculate_md5(model_path) == model['md5sum'], corrupt_msg
                     LOGGER.info('Download complete')
             self.setLanguageList(lang_list, model)
 
         else: # user-defined model
             with open(os.path.join(self.user_network_directory, recog_network+ '.yaml'), encoding='utf8') as file:
                 recog_config = yaml.load(file, Loader=yaml.FullLoader)
-            imgH = recog_config['imgH']
+            
+            global imgH # if custom model, save this variable. (from *.yaml)
+            if recog_config['imgH']:
+                imgH = recog_config['imgH']
+                
             available_lang = recog_config['lang_list']
-            self.setModelLanguage(recog_network, lang_list, available_lang, available_lang)
+            self.setModelLanguage(recog_network, lang_list, available_lang, str(available_lang))
             #char_file = os.path.join(self.user_network_directory, recog_network+ '.txt')
             self.character = recog_config['character_list']
             model_file = recog_network+ '.pth'

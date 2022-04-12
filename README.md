@@ -10,7 +10,12 @@ Ready-to-use OCR with 80+ [supported languages](https://www.jaided.ai/easyocr) a
 
 [Try Demo on our website](https://www.jaided.ai/easyocr)
 
+Integrated into [Huggingface Spaces 🤗](https://huggingface.co/spaces) using [Gradio](https://github.com/gradio-app/gradio). Try out the Web Demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/tomofi/EasyOCR)
+
+
 ## What's new
+- 9 April 2022 - Version 1.4.2
+    - Update dependencies (opencv and pillow issues)
 - 11 September 2021 - Version 1.4.1
     - Add trainer folder
     - Add `readtextlang` method (thanks[@arkya-art](https://github.com/arkya-art), see [PR](https://github.com/JaidedAI/EasyOCR/pull/525))
@@ -184,6 +189,10 @@ If your language has unique elements (such as 1. Arabic: characters change form 
 Lastly, please understand that our priority will have to go to popular languages or sets of languages that share large portions of their characters with each other (also tell us if this is the case for your language). It takes us at least a week to develop a new model, so you may have to wait a while for the new model to be released.
 
 See [List of languages in development](https://github.com/JaidedAI/EasyOCR/issues/91)
+
+## Github Issues
+
+Due to limited resources, an issue older than 6 months will be automatically closed. Please open an issue again if it is critical.
 
 ## Business Inquiries
 
