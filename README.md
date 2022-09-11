@@ -14,6 +14,12 @@ Integrated into [Huggingface Spaces 🤗](https://huggingface.co/spaces) using [
 
 
 ## What's new
+- 1 September 2022 - Version 1.6.1
+    - Fix DBNET path bug for Windows
+    - Add new built-in model `cyrillic_g2`. This model is a new default for Cyrillic script.
+- 24 August 2022 - Version 1.6.0
+    - Restructure code to support alternative text detectors.
+    - Add detector `DBNET`, see [paper](https://arxiv.org/abs/2202.10304v1). It can be used by initializing like this `reader = easyocr.Reader(['en'], detect_network = 'dbnet18')`. *Currently, DBNet text detector requires running with GPU.*
 - 2 June 2022 - Version 1.5.0
     - Add trainer for CRAFT detection model (thanks[@gmuffiness](https://github.com/gmuffiness), see [PR](https://github.com/JaidedAI/EasyOCR/pull/739))
 - 9 April 2022 - Version 1.4.2
@@ -69,7 +75,7 @@ pip install easyocr
 For the latest development release:
 
 ``` bash
-pip install git+git://github.com/jaidedai/easyocr.git
+pip install git+https://github.com/JaidedAI/EasyOCR.git
 ```
 
 Note 1: For Windows, please install torch and torchvision first by following the official instructions here https://pytorch.org. On the pytorch website, be sure to select the right CUDA version you have. If you intend to run on CPU mode only, select `CUDA = None`.
@@ -200,4 +206,4 @@ Due to limited resources, an issue older than 6 months will be automatically clo
 
 ## Business Inquiries
 
-For Enterprise Support, [Jaided AI](https://www.jaided.ai/) offers full service for custom OCR/AI systems from building, to maintenance and deployment. Click [here](https://www.jaided.ai/contactus) to contact us.
+For Enterprise Support, [Jaided AI](https://www.jaided.ai/) offers full service for custom OCR/AI systems from implementation, training/finetuning and deployment. Click [here](https://www.jaided.ai/contactus?ref=github) to contact us.

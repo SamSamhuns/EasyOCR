@@ -1,10 +1,11 @@
-from collections import namedtuple
-
 import torch
 import torch.nn as nn
 import torch.nn.init as init
+
 from torchvision import models
+from torchvision.models import VGG16_BN_Weights
 from torchvision.models.vgg import model_urls
+
 
 def init_weights(modules):
     for m in modules:
@@ -19,11 +20,14 @@ def init_weights(modules):
             m.weight.data.normal_(0, 0.01)
             m.bias.data.zero_()
 
+
 class vgg16_bn(torch.nn.Module):
     def __init__(self, pretrained=True, freeze=True):
         super(vgg16_bn, self).__init__()
         model_urls['vgg16_bn'] = model_urls['vgg16_bn'].replace('https://', 'http://')
-        vgg_pretrained_features = models.vgg16_bn(pretrained=pretrained).features
+        vgg_pretrained_features = models.vgg16_bn(
+            weights=VGG16_BN_Weights.DEFAULT if pretrained else None
+        ).features
         self.slice1 = torch.nn.Sequential()
         self.slice2 = torch.nn.Sequential()
         self.slice3 = torch.nn.Sequential()
@@ -68,6 +72,4 @@ class vgg16_bn(torch.nn.Module):
         h_relu5_3 = h
         h = self.slice5(h)
         h_fc7 = h
-        vgg_outputs = namedtuple("VggOutputs", ['fc7', 'relu5_3', 'relu4_3', 'relu3_2', 'relu2_2'])
-        out = vgg_outputs(h_fc7, h_relu5_3, h_relu4_3, h_relu3_2, h_relu2_2)
-        return out
+        return h_fc7, h_relu5_3, h_relu4_3, h_relu3_2, h_relu2_2
